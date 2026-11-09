@@ -6,9 +6,8 @@ Deck, spreads, prompts and parsing are unchanged from the desktop v3.
 
 ## Changes from the desktop version
 
-- Uses the same Gemma 26B providers as Aether Harbor, but tries Google AI Studio
-  first (then Cloudflare Workers AI, then OpenRouter), so the two apps start on
-  different free quotas. Thinking is off/minimal. There is no
+- Uses the same Gemma 26B provider cascade as Aether Harbor (Cloudflare Workers AI,
+  then Google AI Studio, then OpenRouter). Thinking is off/minimal. There is no
   model selection, LM Studio endpoint or output folder.
 - The analysis is unchanged: a planning call first decides the spread (how many
   cards and the sub-question each card answers), then the reading call uses the

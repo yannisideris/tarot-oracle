@@ -49,8 +49,7 @@ MAX_QUESTION_CHARS = 4000
 MAX_HISTORY_RECORDS = 60
 
 SETTINGS: Dict[str, Any] = {
-    # Google first, so Tarot and Aether Harbor (Cloudflare first) start on different quotas.
-    "active_provider_cascade": ["google", "cloudflare", "openrouter", "local"],
+    "active_provider_cascade": ["cloudflare", "google", "openrouter", "local"],
     "local": {"enabled": False},
 }
 CLIENT = CascadingModelClient(config=SETTINGS)
