@@ -4,12 +4,11 @@ Tarot LLM Oracle v3 (web edition) - deck, prompts and parsing.
 
 Ported from the desktop tarot_llm_oracle_v3.py. The deck, spread variants,
 system prompts, history selection and output parsing are unchanged; only the
-tkinter UI, LM Studio calls and local file writing were removed.
+tkinter UI, LM Studio calls and saving to files were removed.
 """
 
 from __future__ import annotations
 
-import io
 import json
 import os
 import random
@@ -532,129 +531,3 @@ def parse_related_questions(reading_text: str) -> List[str]:
 def parse_synthesis_update(reading_text: str) -> str:
     m = re.search(r"SYNTHESIS_UPDATE:\s*(.*?)(?:\n\s*READING_END|$)", reading_text, re.S | re.I)
     return m.group(1).strip() if m else ""
-
-
-def make_markdown(record: ReadingRecord) -> str:
-    cards = "\n".join(
-        f"{i}. **{c['name']}** - {role}\n   - {c.get('arcana','')}, {c.get('suit','')}\n   - {c.get('keywords','')}"
-        for i, (c, role) in enumerate(zip(record.cards, record.roles), 1)
-    )
-    related = "\n".join(f"{i}. {q}" for i, q in enumerate(record.related_questions, 1)) or "(none parsed)"
-    root_question = (record.root_question or record.question).strip()
-    current_question = (record.current_question or record.question).strip()
-    return f"""# Tarot LLM Oracle Reading
-
-**Date:** {record.timestamp}  
-**Spread:** {record.spread_name}
-**Spread plan rationale:** {record.plan_rationale.strip() or '(none)'}
-
-## Root research anchor
-
-{root_question}
-
-## Current question / facet
-
-{current_question}
-
-## Cards
-
-{cards}
-
-## Symbolic notes / visible thinking
-
-{record.notes.strip() or '(none)'}
-
-## Reading
-
-{record.reading.strip()}
-
-## Related questions proposed by the model
-
-{related}
-
-## Durable synthesis update
-
-{record.synthesis_update.strip() or '(none)'}
-"""
-
-
-def find_pdf_font() -> Optional[str]:
-    candidates = [
-        r"C:\Windows\Fonts\arial.ttf",
-        r"C:\Windows\Fonts\calibri.ttf",
-        "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
-        "/usr/share/fonts/truetype/liberation2/LiberationSans-Regular.ttf",
-        "/Library/Fonts/Arial Unicode.ttf",
-        "/System/Library/Fonts/Supplemental/Arial Unicode.ttf",
-    ]
-    for p in candidates:
-        if os.path.exists(p):
-            return p
-    return None
-
-
-def build_pdf(record: ReadingRecord) -> Optional[bytes]:
-    try:
-        from reportlab.lib.pagesizes import A4
-        from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-        from reportlab.lib.units import cm
-        from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
-        from reportlab.pdfbase import pdfmetrics
-        from reportlab.pdfbase.ttfonts import TTFont
-    except Exception:
-        return None
-
-    buffer = io.BytesIO()
-
-    font_name = "Helvetica"
-    font_path = find_pdf_font()
-    if font_path:
-        try:
-            if "OracleFont" not in pdfmetrics.getRegisteredFontNames():
-                pdfmetrics.registerFont(TTFont("OracleFont", font_path))
-            font_name = "OracleFont"
-        except Exception:
-            font_name = "Helvetica"
-
-    styles = getSampleStyleSheet()  # fresh sheet per PDF, so repeated add() is safe
-    styles.add(ParagraphStyle(name="OracleTitle", parent=styles["Title"], fontName=font_name, fontSize=18, leading=22))
-    styles.add(ParagraphStyle(name="OracleHeading", parent=styles["Heading2"], fontName=font_name, fontSize=13, leading=16, spaceBefore=12))
-    styles.add(ParagraphStyle(name="OracleBody", parent=styles["BodyText"], fontName=font_name, fontSize=10.5, leading=14, spaceAfter=7))
-    styles.add(ParagraphStyle(name="OracleSmall", parent=styles["BodyText"], fontName=font_name, fontSize=9, leading=12, leftIndent=10))
-
-    def esc(s: str) -> str:
-        return (s or "").replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\n", "<br/>")
-
-    root_question = (record.root_question or record.question).strip()
-    current_question = (record.current_question or record.question).strip()
-
-    doc = SimpleDocTemplate(
-        buffer, pagesize=A4, rightMargin=1.6 * cm, leftMargin=1.6 * cm, topMargin=1.6 * cm, bottomMargin=1.6 * cm
-    )
-    story = [Paragraph("Tarot LLM Oracle Reading", styles["OracleTitle"])]
-    story.append(
-        Paragraph(
-            f"Date: {esc(record.timestamp)}<br/>Spread: {esc(record.spread_name)}<br/>Plan: {esc(record.plan_rationale or '(none)')}",
-            styles["OracleSmall"],
-        )
-    )
-    story.append(Spacer(1, 8))
-    story.append(Paragraph("Root research anchor", styles["OracleHeading"]))
-    story.append(Paragraph(esc(root_question), styles["OracleBody"]))
-    story.append(Paragraph("Current question / facet", styles["OracleHeading"]))
-    story.append(Paragraph(esc(current_question), styles["OracleBody"]))
-    story.append(Paragraph("Cards", styles["OracleHeading"]))
-    for i, (card, role) in enumerate(zip(record.cards, record.roles), 1):
-        story.append(Paragraph(f"{i}. <b>{esc(card['name'])}</b> - {esc(role)}<br/>{esc(card.get('keywords',''))}", styles["OracleSmall"]))
-    story.append(Paragraph("Symbolic notes / visible thinking", styles["OracleHeading"]))
-    story.append(Paragraph(esc(record.notes or "(none)"), styles["OracleBody"]))
-    story.append(Paragraph("Reading", styles["OracleHeading"]))
-    for para in re.split(r"\n\s*\n", record.reading.strip()):
-        story.append(Paragraph(esc(para), styles["OracleBody"]))
-    story.append(Paragraph("Related questions", styles["OracleHeading"]))
-    for i, q in enumerate(record.related_questions, 1):
-        story.append(Paragraph(f"{i}. {esc(q)}", styles["OracleSmall"]))
-    story.append(Paragraph("Durable synthesis update", styles["OracleHeading"]))
-    story.append(Paragraph(esc(record.synthesis_update or "(none)"), styles["OracleBody"]))
-    doc.build(story)
-    return buffer.getvalue()

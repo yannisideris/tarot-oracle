@@ -14,9 +14,9 @@ Deck, spreads, prompts and parsing are unchanged from the desktop v3.
 - There is no auto-delay setting. The server limits each visitor IP to
   `TAROT_READINGS_PER_HOUR` readings, and an auto-loop stops after
   `TAROT_AUTO_LOOP_MAX` readings.
-- Reading history (used for synthesis) lives in each visitor's browser, so
-  nobody sees anyone else's readings. Each reading downloads as .md, .txt or .pdf,
-  and "Download all" exports the whole history together with the global synthesis.
+- Nothing is saved to files. Readings can be selected and copied directly.
+  Earlier readings (used for synthesis) are remembered only in each visitor's
+  browser, so nobody sees anyone else's readings. "Forget" clears them.
 
 ## Deploy on Render
 

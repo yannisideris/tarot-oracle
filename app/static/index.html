@@ -40,12 +40,6 @@
   <section class="panel">
     <div class="panel-head">
       <span class="label dark">Final reading</span>
-      <div class="exports" id="exports" hidden>
-        <span class="muted">Save:</span>
-        <button class="chip" type="button" data-fmt="md">.md</button>
-        <button class="chip" type="button" data-fmt="txt">.txt</button>
-        <button class="chip" type="button" data-fmt="pdf">.pdf</button>
-      </div>
     </div>
     <div id="final" class="final" tabindex="0">
       <div class="empty">
@@ -56,13 +50,10 @@
   </section>
 
   <footer class="history">
-    <span id="historyCount" class="muted">No readings saved in this browser yet.</span>
-    <div class="history-actions">
-      <button id="exportAll" class="chip light" type="button" disabled>Download all (.md)</button>
-      <button id="clearHistory" class="chip light" type="button" disabled>Clear history</button>
-    </div>
+    <span id="historyCount" class="muted"></span>
+    <button id="clearHistory" class="chip light" type="button" hidden>Forget</button>
   </footer>
-  <p class="fineprint">Readings are symbolic reflection, not medical, legal or financial advice. Your reading history is stored only in this browser.</p>
+  <p class="fineprint">Readings are symbolic reflection, not medical, legal or financial advice. Earlier readings are remembered only in this browser, so later readings can build on them.</p>
 </main>
 <script src="/static/app.js"></script>
 </body>

@@ -15,14 +15,13 @@ import os
 import queue
 import threading
 import time
-import urllib.parse
 from collections import defaultdict, deque
 from dataclasses import asdict
 from pathlib import Path
 from typing import Any, Deque, Dict, List
 
 from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import FileResponse, JSONResponse, Response, StreamingResponse
+from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
@@ -108,10 +107,6 @@ class ReadingRequest(BaseModel):
     temperature: float = Field(0.85, ge=0.0, le=1.5)
     random_fallback: bool = True
     history: List[Dict[str, Any]] = Field(default_factory=list)
-
-
-class ExportRequest(BaseModel):
-    records: List[Dict[str, Any]] = Field(..., min_length=1, max_length=500)
 
 
 # ----------------------------------------------------------------- reading
@@ -255,50 +250,6 @@ def reading(req: ReadingRequest, request: Request):
         media_type="text/event-stream",
         headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
     )
-
-
-# ------------------------------------------------------------------ export
-def _disposition(filename: str) -> Dict[str, str]:
-    ascii_name = filename.encode("ascii", "ignore").decode() or "tarot_reading"
-    ascii_name = ascii_name.replace('"', "")
-    quoted = urllib.parse.quote(filename, safe="")
-    return {"Content-Disposition": f"attachment; filename=\"{ascii_name}\"; filename*=UTF-8''{quoted}"}
-
-
-def _base_name(record: o.ReadingRecord) -> str:
-    return f"{o.safe_filename_part(record.timestamp.replace(':', ''), 'timestamp')}_{o.slugify(record.question)}"
-
-
-@app.post("/api/export/{fmt}")
-def export(fmt: str, body: ExportRequest):
-    records = [r for r in (o.record_from_dict(d) for d in body.records) if r]
-    if not records:
-        raise HTTPException(400, "No readings to export.")
-    if len(records) == 1:
-        base = _base_name(records[0])
-    else:
-        base = f"tarot_oracle_{len(records)}_readings_{_dt.datetime.now(_dt.timezone.utc):%Y%m%d}"
-
-    if fmt in ("md", "txt"):
-        text = "\n\n---\n\n".join(o.make_markdown(r) for r in records)
-        if len(records) > 1:
-            text += "\n\n---\n\n# Global synthesis\n"
-            for r in records:
-                root = (r.root_question or r.question).strip()
-                current = (r.current_question or r.question).strip()
-                text += f"\n## {r.timestamp} - {current}\n\nRoot anchor: {root}\n\n{r.synthesis_update.strip() or '(no synthesis update)'}\n"
-        media = "text/markdown" if fmt == "md" else "text/plain"
-        return Response(text.encode("utf-8"), media_type=f"{media}; charset=utf-8",
-                        headers=_disposition(f"{base}.{fmt}"))
-    if fmt == "pdf":
-        if len(records) != 1:
-            raise HTTPException(400, "PDF export takes one reading at a time.")
-        data = o.build_pdf(records[0])
-        if not data:
-            raise HTTPException(500, "PDF export is not available on this server.")
-        return Response(data, media_type="application/pdf",
-                        headers=_disposition(f"{base}.pdf"))
-    raise HTTPException(404, "Unknown format.")
 
 
 # ------------------------------------------------------------------- misc

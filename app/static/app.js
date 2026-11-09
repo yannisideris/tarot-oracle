@@ -9,8 +9,8 @@
   const els = {
     temp: $("temp"), random: $("randomSpread"), question: $("question"),
     manual: $("manualBtn"), auto: $("autoBtn"), stop: $("stopBtn"),
-    status: $("status"), final: $("final"), exports: $("exports"),
-    historyCount: $("historyCount"), exportAll: $("exportAll"), clear: $("clearHistory"),
+    status: $("status"), final: $("final"),
+    historyCount: $("historyCount"), clear: $("clearHistory"),
   };
 
   let config = { auto_loop_max: 10, readings_per_hour: 30 };
@@ -48,10 +48,10 @@
   function refreshHistoryUI() {
     const n = loadHistory().length;
     els.historyCount.textContent = n
-      ? `${n} reading${n === 1 ? "" : "s"} saved in this browser · used for synthesis in later readings`
-      : "No readings saved in this browser yet.";
-    els.exportAll.disabled = !n || running;
-    els.clear.disabled = !n || running;
+      ? `The oracle remembers ${n} earlier reading${n === 1 ? "" : "s"} in this browser.`
+      : "";
+    els.clear.hidden = !n;
+    els.clear.disabled = running;
   }
 
   // ------------------------------------------------------------ helpers
@@ -190,7 +190,6 @@
   // ------------------------------------------------------------ one reading
   async function runOne(rootQuestion, question) {
     controller = new AbortController();
-    els.exports.hidden = true;
     lastRecord = null;
     els.final.innerHTML = `<div class="notice info">Contacting the oracle… (if the site was asleep, the first reading can take up to a minute to start)</div>`;
     setStatus("Connecting…", "busy");
@@ -235,7 +234,6 @@
         stickToBottom(keep);
         const list = loadHistory(); list.push(record); saveHistory(list);
         lastRecord = record;
-        els.exports.hidden = false;
         refreshHistoryUI();
         return record;
       }
@@ -297,29 +295,6 @@
     runSequence(q, auto);
   }
 
-  // ------------------------------------------------------------ export
-  async function download(fmt, records) {
-    try {
-      const r = await fetch(`/api/export/${fmt}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ records }),
-      });
-      if (!r.ok) throw new Error(`Export failed (${r.status}).`);
-      const blob = await r.blob();
-      const cd = r.headers.get("Content-Disposition") || "";
-      const star = /filename\*=UTF-8''([^;]+)/i.exec(cd);
-      const plain = /filename="([^"]+)"/.exec(cd);
-      const name = star ? decodeURIComponent(star[1]) : (plain ? plain[1] : `tarot_reading.${fmt}`);
-      const url = URL.createObjectURL(blob);
-      const a = Object.assign(document.createElement("a"), { href: url, download: name });
-      document.body.appendChild(a); a.click(); a.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 2000);
-    } catch (err) {
-      setStatus(err.message || "Export failed.", "error");
-    }
-  }
-
   // ------------------------------------------------------------ wiring
   els.manual.addEventListener("click", () => start(false));
   els.auto.addEventListener("click", () => start(true));
@@ -331,10 +306,6 @@
   els.question.addEventListener("keydown", (e) => {
     if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) { e.preventDefault(); start(false); }
   });
-  els.exports.addEventListener("click", (e) => {
-    const fmt = e.target.dataset && e.target.dataset.fmt;
-    if (fmt && lastRecord) download(fmt, [lastRecord]);
-  });
   els.final.addEventListener("click", (e) => {
     const btn = e.target.closest("button[data-q]");
     if (!btn || !lastRecord || running) return;
@@ -342,15 +313,11 @@
     els.question.focus();
     setStatus("Related question copied into the question box. Choose Manual reading to continue.");
   });
-  els.exportAll.addEventListener("click", () => {
-    const list = loadHistory();
-    if (list.length) download("md", list);
-  });
   els.clear.addEventListener("click", () => {
-    if (!confirm("Delete all readings saved in this browser? Download them first if you want to keep them.")) return;
+    if (!confirm("Forget all earlier readings? Later readings will no longer build on them.")) return;
     try { localStorage.removeItem(HISTORY_KEY); } catch {}
     refreshHistoryUI();
-    setStatus("History cleared.");
+    setStatus("Earlier readings forgotten.");
   });
 
   refreshHistoryUI();

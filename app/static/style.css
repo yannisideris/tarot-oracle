@@ -153,7 +153,6 @@ textarea:focus, input:focus, button:focus-visible, .final:focus-visible {
   gap: 8px;
   padding: 2px 2px 8px;
 }
-.exports { display: flex; align-items: center; gap: 6px; }
 .muted { color: var(--muted-on-light); font-size: .85rem; }
 .history .muted, .fineprint { color: var(--muted-on-dark); }
 
@@ -287,13 +286,13 @@ textarea:focus, input:focus, button:focus-visible, .final:focus-visible {
 
 /* ---------- history ---------- */
 .history {
+  min-height: 26px;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 8px 12px;
 }
-.history-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 .fineprint { margin: 0; font-size: .78rem; }
 
 @media (max-width: 640px) {
