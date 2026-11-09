@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tarot LLM Oracle v3</title>
+<meta name="description" content="A Tarot-based theoretical oracle: Python RNG draws from the full 78-card deck, Gemma 26B interprets.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='7' y='3' width='18' height='26' rx='3' fill='%234B3621' stroke='%231CA9C9' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' r='4' fill='%231CA9C9'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<main class="app">
+  <header class="top">
+    <div class="brand">
+      <h1>Tarot LLM Oracle <span class="ver">v3</span></h1>
+      <p class="sub">Gemma 26B · full 78-card deck · cards drawn by Python RNG</p>
+    </div>
+    <div class="settings">
+      <label class="field">Temp
+        <input id="temp" type="number" min="0" max="1.5" step="0.05" value="0.85" inputmode="decimal">
+      </label>
+      <label class="check"><input id="randomSpread" type="checkbox" checked> Random fallback spread</label>
+    </div>
+  </header>
+
+  <section class="ask">
+    <label for="question" class="label">Root question / current facet</label>
+    <textarea id="question" rows="4" spellcheck="true">Se ti egkeitai ... ?</textarea>
+  </section>
+
+  <section class="controls">
+    <div class="buttons">
+      <button id="manualBtn" class="btn accent" type="button">Manual reading</button>
+      <button id="autoBtn" class="btn" type="button">Start auto-loop</button>
+      <button id="stopBtn" class="btn ghost" type="button" disabled>Stop</button>
+    </div>
+    <div id="status" class="status" role="status" aria-live="polite">Ready.</div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head">
+      <span class="label dark">Final reading</span>
+      <div class="exports" id="exports" hidden>
+        <span class="muted">Save:</span>
+        <button class="chip" type="button" data-fmt="md">.md</button>
+        <button class="chip" type="button" data-fmt="txt">.txt</button>
+        <button class="chip" type="button" data-fmt="pdf">.pdf</button>
+      </div>
+    </div>
+    <div id="final" class="final" tabindex="0">
+      <div class="empty">
+        <p>Write a question or theme, then choose <strong>Manual reading</strong> for a single reading, or <strong>Start auto-loop</strong> to let the oracle follow its own related questions around the same root question.</p>
+        <p class="muted">The model plans the spread; Python draws the cards; answers are always in English.</p>
+      </div>
+    </div>
+  </section>
+
+  <footer class="history">
+    <span id="historyCount" class="muted">No readings saved in this browser yet.</span>
+    <div class="history-actions">
+      <button id="exportAll" class="chip light" type="button" disabled>Download all (.md)</button>
+      <button id="clearHistory" class="chip light" type="button" disabled>Clear history</button>
+    </div>
+  </footer>
+  <p class="fineprint">Readings are symbolic reflection, not medical, legal or financial advice. Your reading history is stored only in this browser.</p>
+</main>
+<script src="/static/app.js"></script>
+</body>
+</html>

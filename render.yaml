@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: tarot-oracle
+    runtime: docker
+    plan: free
+    healthCheckPath: /healthz
+    envVars:
+      - key: GOOGLE_API_KEY
+        sync: false
+      - key: CLOUDFLARE_API_TOKEN
+        sync: false
+      - key: CLOUDFLARE_ACCOUNT_ID
+        sync: false
+      - key: OPENROUTER_API_KEY
+        sync: false
