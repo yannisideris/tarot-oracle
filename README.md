@@ -9,8 +9,15 @@ Deck, spreads, prompts and parsing are unchanged from the desktop v3.
 - Uses the same Gemma 26B provider cascade as Aether Harbor (Cloudflare Workers AI,
   then Google AI Studio, then OpenRouter). Thinking is off/minimal. There is no
   model selection, LM Studio endpoint or output folder.
-- The separate thinking pane is gone. The model's short symbolic notes appear
-  at the top of the reading.
+- The analysis is unchanged: a planning call first decides the spread (how many
+  cards and the sub-question each card answers), then the reading call uses the
+  same prompt and output format as the desktop v3 (symbolic notes, reading,
+  domain / technical lens, synthesis, what to keep, related questions,
+  synthesis update).
+- Only the presentation is new: the planner's roles appear on card tiles,
+  sections get headings, and related questions can be clicked to use as the
+  next facet. The model's symbolic notes appear at the top of the reading;
+  there is no separate thinking pane.
 - There is no auto-delay setting. The server limits each visitor IP to
   `TAROT_READINGS_PER_HOUR` readings, and an auto-loop stops after
   `TAROT_AUTO_LOOP_MAX` readings.
